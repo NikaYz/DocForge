@@ -8,8 +8,15 @@ import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
 import TableRow from '@tiptap/extension-table-row'
 import Image from '@tiptap/extension-image'
-import ImageResize from 'tiptap-extension-resize-image';
+import ImageResize from 'tiptap-extension-resize-image'
 import Underline from '@tiptap/extension-underline'
+import FontFamily from '@tiptap/extension-font-family'
+import TextStyle from '@tiptap/extension-text-style'
+import Highlight from '@tiptap/extension-highlight'
+import Link from '@tiptap/extension-link'
+import { Color } from '@tiptap/extension-color'
+import TextAlign from '@tiptap/extension-text-align'
+import { FontSizeExtension } from '@/extensions/font-size'
 import StarterKit from '@tiptap/starter-kit'
 import { useEditorStore } from '@/store/use-editor-store'
 
@@ -49,6 +56,20 @@ export const Editor = () => {
         },
     extensions: [  
         StarterKit,
+        FontSizeExtension,
+        TextAlign.configure({
+            types: ['heading', 'paragraph'],
+        }),
+
+        Highlight.configure({multicolor: true}),
+        Link.configure({
+            openOnClick: false,
+            autolink: true,
+            defaultProtocol: "https"
+        }),
+        TextStyle,
+        Color,
+        FontFamily,
         TaskList,
         TaskItem.configure({
             nested: true,
@@ -66,6 +87,7 @@ export const Editor = () => {
 
     ],
     content: '<p>Hello World! 🌎️</p>',
+    immediatelyRender: false,
   })
 
   
