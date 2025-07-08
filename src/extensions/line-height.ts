@@ -3,19 +3,20 @@ import "@tiptap/extension-text-style";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
-    fontSize: {
-      setFontSize: (size: string) => ReturnType;
-      unsetFontSize: () => ReturnType;
+    lineHeight: {
+      setLineHeight: (size: string) => ReturnType;
+      unsetLineHeight: () => ReturnType;
     };
   }
 }
 
-export const FontSizeExtension = Extension.create({
-  name: "fontSize",
+export const lineHeightExtension = Extension.create({
+  name: "lineHeight",
 
   addOptions() {
     return {
-      types: ["textStyle"],
+      types: ["paragraph","heading"],
+      defaultLineHeight: "normal"
     };
   },
 
@@ -24,13 +25,15 @@ export const FontSizeExtension = Extension.create({
       {
         types: this.options.types,
         attributes: {
-          fontSize: {
-            default: null,
-            parseHTML: (element) => element.style.fontSize,
+          lineHeight: {
+            default: this.options.defaultLineHeight,
+            parseHTML: element => {
+              return element.style.lineHeight || this.options.defaultLineHeight
+            },
             renderHTML: (attributes) => {
-              if (!attributes.fontSize) return {};
+              if (!attributes.lineHeight) return {};
               return {
-                style: `font-size: ${attributes.fontSize}`,
+                style: `line-height: ${attributes.lineHeight}`,
               };
             },
           },
@@ -41,20 +44,39 @@ export const FontSizeExtension = Extension.create({
 
   addCommands() {
     return {
-      setFontSize:
-        (fontSize: string) =>
-        ({ chain }) =>
-          chain()
-            .setMark("textStyle", { fontSize })
-            .run(),
+      setLineHeight:
+        (lineHeight: string) => ({tr, state, dispatch}) => {
+          const {selection} = state;
+          tr = tr.setSelection(selection);
+          const {from, to} = selection;
+          state.doc.nodesBetween(from, to, (node,pos) => {
+            if(this.options.types.includes(node.type.name)){
+              tr = tr.setNodeMarkup(pos, undefined, {
+                ...node.attrs,
+                lineHeight,
+              })
+            }
+          })
+          if(dispatch) dispatch(tr);
+          return true;
+        },
+        unsetLineHeight:() => ({tr, state, dispatch}) => {
+          const {selection} = state;
+          tr = tr.setSelection(selection);
+          const {from, to} = selection;
+          state.doc.nodesBetween(from, to, (node,pos) => {
+            if(this.options.types.includes(node.type.name)){
+              tr = tr.setNodeMarkup(pos, undefined, {
+                ...node.attrs,
+                lineHeight : this.options.defaultLineHeight,
+              })
+            }
+          })
+          if(dispatch) dispatch(tr);
+          return true;
 
-      unsetFontSize:
-        () =>
-        ({ chain }) =>
-          chain()
-            .setMark("textStyle", { fontSize: null })
-            .removeEmptyTextStyle()
-            .run(),
-    };
-  },
-});
+        }
+        
+      }
+    }
+})
